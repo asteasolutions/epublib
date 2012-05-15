@@ -1,5 +1,6 @@
 package nl.siegmann.epublib.service;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,12 +45,20 @@ public class MediatypeService {
 	public static final MediaType XPGT = new MediaType("application/adobe-page-template+xml", ".xpgt");
 	public static final MediaType PLS = new MediaType("application/pls+xml", ".pls");
 
+	
+	//Additional media types
 	public static final MediaType M4V = new MediaType("video/x-m4v", ".m4v");
 	public static final MediaType WEBM = new MediaType("video/webm", ".webm");
+	public static final MediaType MOV = new MediaType("video/quicktime", ".mov", Arrays.asList(".mov", "qt"));
+//	public static final MediaType MP4 = new MediaType("video/mp4", ".mp4");
+	public static final MediaType MPEG_VIDEO = new MediaType("video/mpeg", ".mpeg", Arrays.asList(".mpeg", ".mpg", ".mpe"));
+	public static final MediaType MIDI = new MediaType("audio/midi", ".midi", Arrays.asList(".midi", ".mid"));
+	public static final MediaType MPEG_AUDIO = new MediaType("audio/mpeg", ".mp3", Arrays.asList(".mp3", ".mp2", ".mpga"));
+	public static final MediaType WAV = new MediaType("audio/x-wav", ".wav", Arrays.asList(".wav", ".wav"));
 	
 	public static MediaType[] mediatypes = new MediaType[] {
 		XHTML, EPUB, JPG, PNG, GIF, CSS, SVG, TTF, NCX, XPGT, OPENTYPE, WOFF, SMIL, PLS, JAVASCRIPT, MP3, MP4, OGG, 
-		M4V, WEBM
+		M4V, WEBM, MOV, MPEG_VIDEO, MIDI, MPEG_AUDIO, WAV
 	};
 	
 	public static Map<String, MediaType> mediaTypesByName = new HashMap<String, MediaType>();
