@@ -42,9 +42,11 @@ public class MediatypeService {
 	public static final MediaType SMIL = new MediaType("application/smil+xml", ".smil");
 	public static final MediaType XPGT = new MediaType("application/adobe-page-template+xml", ".xpgt");
 	public static final MediaType PLS = new MediaType("application/pls+xml", ".pls");
+
+	public static final MediaType M4V = new MediaType("video/x-m4v", ".m4v");
 	
 	public static MediaType[] mediatypes = new MediaType[] {
-		XHTML, EPUB, JPG, PNG, GIF, CSS, SVG, TTF, NCX, XPGT, OPENTYPE, WOFF, SMIL, PLS, JAVASCRIPT, MP3, MP4, OGG
+		XHTML, EPUB, JPG, PNG, GIF, CSS, SVG, TTF, NCX, XPGT, OPENTYPE, WOFF, SMIL, PLS, JAVASCRIPT, MP3, MP4, OGG, M4V
 	};
 	
 	public static Map<String, MediaType> mediaTypesByName = new HashMap<String, MediaType>();
