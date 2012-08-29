@@ -22,6 +22,7 @@ public class MediatypeService {
 	public static final MediaType JAVASCRIPT = new MediaType("text/javascript", ".js");
 	public static final MediaType CSS = new MediaType("text/css", ".css");
 
+
 	// images
 	public static final MediaType JPG = new MediaType("image/jpeg", ".jpg", new String[] {".jpg", ".jpeg"});
 	public static final MediaType PNG = new MediaType("image/png", ".png");
@@ -30,23 +31,25 @@ public class MediatypeService {
 	public static final MediaType SVG = new MediaType("image/svg+xml", ".svg");
 
 	// fonts
-	public static final MediaType TTF = new MediaType("application/x-truetype-font", ".ttf");
 	public static final MediaType OPENTYPE = new MediaType("application/vnd.ms-opentype", ".otf");
+	public static final MediaType TTF = new MediaType("application/x-truetype-font", ".ttf");
 	public static final MediaType WOFF = new MediaType("application/font-woff", ".woff");
 	
 	// audio
+	public static final MediaType OGG = new MediaType("audio/ogg", ".ogg", new String[] {".ogg", ".oga"});
 	public static final MediaType MP3 = new MediaType("audio/mpeg", ".mp3");
 	public static final MediaType MP4 = new MediaType("audio/mp4", ".mp4");
-	public static final MediaType OGG = new MediaType("audio/ogg", ".ogg");	
 
 	public static final MediaType SMIL = new MediaType("application/smil+xml", ".smil");
 	public static final MediaType XPGT = new MediaType("application/adobe-page-template+xml", ".xpgt");
 	public static final MediaType PLS = new MediaType("application/pls+xml", ".pls");
 
 	public static final MediaType M4V = new MediaType("video/x-m4v", ".m4v");
+	public static final MediaType WEBM = new MediaType("video/webm", ".webm");
 	
 	public static MediaType[] mediatypes = new MediaType[] {
-		XHTML, EPUB, JPG, PNG, GIF, CSS, SVG, TTF, NCX, XPGT, OPENTYPE, WOFF, SMIL, PLS, JAVASCRIPT, MP3, MP4, OGG, M4V
+		XHTML, EPUB, JPG, PNG, GIF, CSS, SVG, TTF, NCX, XPGT, OPENTYPE, WOFF, SMIL, PLS, JAVASCRIPT, MP3, MP4, OGG, 
+		M4V, WEBM
 	};
 	
 	public static Map<String, MediaType> mediaTypesByName = new HashMap<String, MediaType>();
