@@ -49,6 +49,7 @@ public class MediatypeService {
 	//Additional media types
 	public static final MediaType M4V = new MediaType("video/x-m4v", ".m4v");
 	public static final MediaType WEBM = new MediaType("video/webm", ".webm");
+	public static final MediaType WMV = new MediaType("video/wmv", ".wmv");
 	public static final MediaType MOV = new MediaType("video/quicktime", ".mov", Arrays.asList(".mov", "qt"));
 //	public static final MediaType MP4 = new MediaType("video/mp4", ".mp4");
 	public static final MediaType MPEG_VIDEO = new MediaType("video/mpeg", ".mpeg", Arrays.asList(".mpeg", ".mpg", ".mpe"));
@@ -58,7 +59,7 @@ public class MediatypeService {
 	
 	public static MediaType[] mediatypes = new MediaType[] {
 		XHTML, EPUB, JPG, PNG, GIF, CSS, SVG, TTF, NCX, XPGT, OPENTYPE, WOFF, SMIL, PLS, JAVASCRIPT, MP3, MP4, OGG, 
-		M4V, WEBM, MOV, MPEG_VIDEO, MIDI, MPEG_AUDIO, WAV
+		M4V, WEBM, MOV, MPEG_VIDEO, WMV, MIDI, MPEG_AUDIO, WAV
 	};
 	
 	public static Map<String, MediaType> mediaTypesByName = new HashMap<String, MediaType>();
