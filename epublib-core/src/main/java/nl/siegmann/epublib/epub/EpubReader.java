@@ -1,15 +1,12 @@
 package nl.siegmann.epublib.epub;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
+import net.sf.jazzlib.ZipFile;
+import net.sf.jazzlib.ZipInputStream;
 import nl.siegmann.epublib.Constants;
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.MediaType;
@@ -52,34 +49,13 @@ public class EpubReader {
 	 * 
 	 * @param in the inputstream from which to read the epub
 	 * @param encoding the encoding to use for the html files within the epub
-	 * @return
+	 * @return the Book as read from the inputstream
 	 * @throws IOException
 	 */
 	public Book readEpub(InputStream in, String encoding) throws IOException {
 		return readEpub(new ZipInputStream(in), encoding);
 	}	
 	
-	/**
-	 * Reads this EPUB without loading all resources into memory.
-	 * 
-	 * @param fileName the file to load
-	 * @param encoding the encoding for XHTML files
-	 * @param lazyLoadedTypes a list of the MediaType to load lazily
-	 * @return
-	 * @throws IOException
-	 */
-	public Book readEpubLazy( String fileName, String encoding, List<MediaType> lazyLoadedTypes ) throws IOException {
-		Book result = new Book();
-		Resources resources = readLazyResources(fileName, encoding, lazyLoadedTypes);
-		handleMimeType(result, resources);
-		String packageResourceHref = getPackageResourceHref(resources);
-		Resource packageResource = processPackageResource(packageResourceHref, result, resources);
-		result.setOpfResource(packageResource);
-		Resource ncxResource = processNcxResource(packageResource, result);
-		result.setNcxResource(ncxResource);
-		result = postProcessBook(result);
-		return result;
-	}
 	
 
 	/**
@@ -88,33 +64,54 @@ public class EpubReader {
 	 * @param fileName the file to load
 	 * @param encoding the encoding for XHTML files
 	 * 
-	 * @return
+	 * @return this Book without loading all resources into memory.
 	 * @throws IOException
 	 */
-	public Book readEpubLazy( String fileName, String encoding ) throws IOException {
-		return readEpubLazy(fileName, encoding, Arrays.asList(MediatypeService.mediatypes) );
+	public Book readEpubLazy(ZipFile zipFile, String encoding ) throws IOException {
+		return readEpubLazy(zipFile, encoding, Arrays.asList(MediatypeService.mediatypes) );
 	}
 	
 	public Book readEpub(ZipInputStream in, String encoding) throws IOException {
-        return readEpubResources(readResources(in, encoding));
+        return readEpub(ResourcesLoader.loadResources(in, encoding));
 	}
 
     public Book readEpub(ZipFile in, String encoding) throws IOException {
-        return readEpubResources(readResources(in, encoding));
+        return readEpub(ResourcesLoader.loadResources(in, encoding));
     }
 
-    public Book readEpubResources(Resources resources) throws IOException{
-        Book result = new Book();
-        handleMimeType(result, resources);
-        String packageResourceHref = getPackageResourceHref(resources);
-        Resource packageResource = processPackageResource(packageResourceHref, result, resources);
-        result.setOpfResource(packageResource);
-        Resource ncxResource = processNcxResource(packageResource, result);
-        result.setNcxResource(ncxResource);
-        result = postProcessBook(result);
-        return result;
+    /**
+	 * Reads this EPUB without loading all resources into memory.
+	 * 
+	 * @param fileName the file to load
+	 * @param encoding the encoding for XHTML files
+	 * @param lazyLoadedTypes a list of the MediaType to load lazily
+	 * @return this Book without loading all resources into memory.
+	 * @throws IOException
+	 */
+	public Book readEpubLazy(ZipFile zipFile, String encoding, List<MediaType> lazyLoadedTypes ) throws IOException {
+		Resources resources = ResourcesLoader.loadResources(zipFile, encoding, lazyLoadedTypes);
+		return readEpub(resources);
+	}
+	
+    public Book readEpub(Resources resources) throws IOException{
+        return readEpub(resources, new Book());
     }
-
+    
+    public Book readEpub(Resources resources, Book result) throws IOException{
+    	if (result == null) {
+    		result = new Book();
+    	}
+    	handleMimeType(result, resources);
+    	String packageResourceHref = getPackageResourceHref(resources);
+    	Resource packageResource = processPackageResource(packageResourceHref, result, resources);
+    	result.setOpfResource(packageResource);
+    	Resource ncxResource = processNcxResource(packageResource, result);
+    	result.setNcxResource(ncxResource);
+    	result = postProcessBook(result);
+    	return result;
+    }
+    
+    
 	private Book postProcessBook(Book book) {
 		if (bookProcessor != null) {
 			book = bookProcessor.processBook(book);
@@ -160,68 +157,4 @@ public class EpubReader {
 	private void handleMimeType(Book result, Resources resources) {
 		resources.remove("mimetype");
 	}
-	
-	private Resources readLazyResources( String fileName, String defaultHtmlEncoding,
-			List<MediaType> lazyLoadedTypes) throws IOException {		
-				
-		ZipInputStream in = new ZipInputStream(new FileInputStream(fileName));
-		
-		Resources result = new Resources();
-		for(ZipEntry zipEntry = in.getNextEntry(); zipEntry != null; zipEntry = in.getNextEntry()) {
-			if(zipEntry.isDirectory()) {
-				continue;
-			}
-			
-			String href = zipEntry.getName();
-			MediaType mediaType = MediatypeService.determineMediaType(href);			
-			
-			Resource resource;
-			
-			if ( lazyLoadedTypes.contains(mediaType) ) {
-				resource = new Resource(fileName, zipEntry.getSize(), href);								
-			} else {			
-				resource = new Resource( in, fileName, (int) zipEntry.getSize(), href );
-			}
-			
-			if(resource.getMediaType() == MediatypeService.XHTML) {
-				resource.setInputEncoding(defaultHtmlEncoding);
-			}
-			result.add(resource);
-		}
-		
-		return result;
-	}	
-
-	private Resources readResources(ZipInputStream in, String defaultHtmlEncoding) throws IOException {
-		Resources result = new Resources();
-		for(ZipEntry zipEntry = in.getNextEntry(); zipEntry != null; zipEntry = in.getNextEntry()) {
-			if(zipEntry.isDirectory()) {
-				continue;
-			}
-			Resource resource = ResourceUtil.createResource(zipEntry, in);
-			if(resource.getMediaType() == MediatypeService.XHTML) {
-				resource.setInputEncoding(defaultHtmlEncoding);
-			}
-			result.add(resource);
-		}
-		return result;
-	}
-
-    private Resources readResources(ZipFile zipFile, String defaultHtmlEncoding) throws IOException {
-        Resources result = new Resources();
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-
-        while(entries.hasMoreElements()){
-            ZipEntry zipEntry = entries.nextElement();
-            if(zipEntry != null && !zipEntry.isDirectory()){
-                Resource resource = ResourceUtil.createResource(zipEntry, zipFile.getInputStream(zipEntry));
-                if(resource.getMediaType() == MediatypeService.XHTML) {
-                    resource.setInputEncoding(defaultHtmlEncoding);
-                }
-                result.add(resource);
-            }
-        }
-
-        return result;
-    }
 }

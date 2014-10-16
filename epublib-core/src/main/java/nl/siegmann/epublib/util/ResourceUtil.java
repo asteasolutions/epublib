@@ -1,12 +1,17 @@
 package nl.siegmann.epublib.util;
 
-import java.io.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
+import net.sf.jazzlib.ZipEntry;
+import net.sf.jazzlib.ZipInputStream;
 import nl.siegmann.epublib.Constants;
 import nl.siegmann.epublib.domain.MediaType;
 import nl.siegmann.epublib.domain.Resource;
@@ -41,7 +46,7 @@ public class ResourceUtil {
 	 * 
 	 * @param title
 	 * @param href
-	 * @return
+	 * @return a resource with as contents a html page with the given title.
 	 */
 	public static Resource createResource(String title, String href) {
 		String content = "<html><head><title>" + title + "</title></head><body><h1>" + title + "</h1></body></html>";
@@ -53,7 +58,7 @@ public class ResourceUtil {
 	 * 
 	 * @param zipEntry
 	 * @param zipInputStream
-	 * @return
+	 * @return a resource created out of the given zipEntry and zipInputStream.
 	 * @throws IOException
 	 */
 	public static Resource createResource(ZipEntry zipEntry, ZipInputStream zipInputStream) throws IOException {
@@ -72,7 +77,7 @@ public class ResourceUtil {
 	 * @param inputEncoding
 	 * @param outputEncoding
 	 * @param input
-	 * @return
+	 * @return the string from given input character encoding converted to the requested output character encoding.
 	 * @throws UnsupportedEncodingException
 	 */
 	public static byte[] recode(String inputEncoding, String outputEncoding, byte[] input) throws UnsupportedEncodingException {
@@ -108,8 +113,8 @@ public class ResourceUtil {
 	 * Reads the given resources inputstream, parses the xml therein and returns the result as a Document
 	 * 
 	 * @param resource
-	 * @param documentBuilderFactory
-	 * @return
+	 * @param documentBuilder
+	 * @return the document created from the given resource
 	 * @throws UnsupportedEncodingException
 	 * @throws SAXException
 	 * @throws IOException

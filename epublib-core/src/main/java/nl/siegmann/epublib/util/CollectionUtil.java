@@ -1,5 +1,6 @@
 package nl.siegmann.epublib.util;
 
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +35,7 @@ public class CollectionUtil {
 	 * Creates an Enumeration out of the given Iterator.
 	 * @param <T>
 	 * @param it
-	 * @return
+	 * @return an Enumeration created out of the given Iterator.
 	 */
 	public static <T> Enumeration<T> createEnumerationFromIterator(Iterator<T> it) {
 		return new IteratorEnumerationAdapter<T>(it);
@@ -46,12 +47,22 @@ public class CollectionUtil {
 	 * 
 	 * @param <T>
 	 * @param list
-	 * @return
+	 * @return the first element of the list, null if the list is null or empty.
 	 */
 	public static <T> T first(List<T> list) {
 		if(list == null || list.isEmpty()) {
 			return null;
 		}
 		return list.get(0);
+	}
+	
+	/**
+	 * Whether the given collection is null or has no elements.
+	 * 
+	 * @param collection
+	 * @return Whether the given collection is null or has no elements.
+	 */
+	public static boolean isEmpty(Collection<?> collection) {
+		return collection == null || collection.isEmpty();
 	}
 }

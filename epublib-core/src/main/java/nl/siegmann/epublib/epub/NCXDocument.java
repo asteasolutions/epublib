@@ -21,7 +21,6 @@ import nl.siegmann.epublib.domain.TableOfContents;
 import nl.siegmann.epublib.service.MediatypeService;
 import nl.siegmann.epublib.util.ResourceUtil;
 import nl.siegmann.epublib.util.StringUtil;
-import org.apache.commons.io.FilenameUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +118,13 @@ public class NCXDocument {
 
 	private static TOCReference readTOCReference(Element navpointElement, Book book) {
 		String label = readNavLabel(navpointElement);
-		String reference = FilenameUtils.getPath(book.getSpine().getTocResource().getHref())+readNavReference(navpointElement);
+		String tocResourceRoot = StringUtil.substringBeforeLast(book.getSpine().getTocResource().getHref(), '/');
+		if (tocResourceRoot.length() == book.getSpine().getTocResource().getHref().length()) {
+			tocResourceRoot = "";
+		} else {
+			tocResourceRoot = tocResourceRoot + "/";
+		}
+		String reference = tocResourceRoot + readNavReference(navpointElement);
 		String href = StringUtil.substringBefore(reference, Constants.FRAGMENT_SEPARATOR_CHAR);
 		String fragmentId = StringUtil.substringAfter(reference, Constants.FRAGMENT_SEPARATOR_CHAR);
 		Resource resource = book.getResources().getByHref(href);
@@ -131,7 +136,6 @@ public class NCXDocument {
 		result.setChildren(readTOCReferences(navpointElement.getChildNodes(), book));
 		return result;
 	}
-
 	
 	private static String readNavReference(Element navpointElement) {
 		Element contentElement = DOMUtil.getFirstElementByTagNameNS(navpointElement, NAMESPACE_NCX, NCXTags.content);
@@ -161,10 +165,9 @@ public class NCXDocument {
 	/**
 	 * Generates a resource containing an xml document containing the table of contents of the book in ncx format.
 	 * 
-	 * @param epubWriter
-	 * @param book
-	 * @return
-	 * @
+	 * @param xmlSerializer the serializer used
+	 * @param book the book to serialize
+	 * 
 	 * @throws FactoryConfigurationError
 	 * @throws IOException 
 	 * @throws IllegalStateException 

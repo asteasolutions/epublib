@@ -1,22 +1,16 @@
 package nl.siegmann.epublib.domain;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Serializable;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import nl.siegmann.epublib.Constants;
 import nl.siegmann.epublib.service.MediatypeService;
 import nl.siegmann.epublib.util.IOUtil;
 import nl.siegmann.epublib.util.StringUtil;
 import nl.siegmann.epublib.util.commons.io.XmlStreamReader;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents a resource that is part of the epub.
@@ -34,15 +28,10 @@ public class Resource implements Serializable {
 	private String id;
 	private String title;
 	private String href;
-	private String originalHref;
+	protected String originalHref;
 	private MediaType mediaType;
 	private String inputEncoding = Constants.CHARACTER_ENCODING;
-	private byte[] data;
-		
-	private String fileName;
-	private long cachedSize;
-	
-	private static final Logger LOG = LoggerFactory.getLogger(Resource.class);
+	protected byte[] data;
 	
 	/**
 	 * Creates an empty Resource with the given href.
@@ -74,7 +63,7 @@ public class Resource implements Serializable {
 	 * 
 	 * Assumes that if the data is of a text type (html/css/etc) then the encoding will be UTF-8
 	 * 
-	 * @see nl.siegmann.epublib.service.MediatypeService.determineMediaType(String)
+	 * @see nl.siegmann.epublib.service.MediatypeService#determineMediaType(String)
 	 * 
 	 * @param data The Resource's contents
 	 * @param href The location of the resource within the epub. Example: "chapter1.html".
@@ -86,7 +75,8 @@ public class Resource implements Serializable {
 	/**
 	 * Creates a resource with the data from the given Reader at the specified href.
 	 * The MediaType will be determined based on the href extension.
-	 * @see nl.siegmann.epublib.service.MediatypeService.determineMediaType(String)
+	 *
+	 * @see nl.siegmann.epublib.service.MediatypeService#determineMediaType(String)
 	 *  
 	 * @param in The Resource's contents
 	 * @param href The location of the resource within the epub. Example: "cover.jpg".
@@ -98,13 +88,13 @@ public class Resource implements Serializable {
 	/**
 	 * Creates a resource with the data from the given InputStream at the specified href.
 	 * The MediaType will be determined based on the href extension.
-	 * @see nl.siegmann.epublib.service.MediatypeService.determineMediaType(String)
+	 *
+	 * @see nl.siegmann.epublib.service.MediatypeService#determineMediaType(String)
 	 * 
 	 * Assumes that if the data is of a text type (html/css/etc) then the encoding will be UTF-8
 	 * 
-	 * It is recommended to us the
-	 * @see nl.siegmann.epublib.domain.Resource.Resource(Reader, String)
-	 * method for creating textual (html/css/etc) resources to prevent encoding problems.
+	 * It is recommended to us the {@link #Resource(Reader, String)} method for creating textual
+	 * (html/css/etc) resources to prevent encoding problems.
 	 * Use this method only for binary Resources like images, fonts, etc.
 	 * 
 	 * 
@@ -112,43 +102,7 @@ public class Resource implements Serializable {
 	 * @param href The location of the resource within the epub. Example: "cover.jpg".
 	 */
 	public Resource(InputStream in, String href) throws IOException {
-		this(null, IOUtil.toByteArray(in),  href, MediatypeService.determineMediaType(href));
-	}
-
-    /**
-     * Creates a Resource that tries to load the data, but falls back to lazy loading.
-     *
-     * If the size of the resource is known ahead of time we can use that to allocate
-     * a matching byte[]. If this succeeds we can safely load the data.
-     *
-     * If it fails we leave the data null for now and it will be lazy-loaded when
-     * it is accessed.
-     *
-     * @param in
-     * @param fileName
-     * @param length
-     * @param href
-     * @throws IOException
-     */
-    public Resource(InputStream in, String fileName, int length, String href) throws IOException {
-        this(  null, IOUtil.toByteArray(in, length), href, MediatypeService.determineMediaType(href));
-        this.fileName = fileName;
-        this.cachedSize = length;
-    }
-
-	/**
-	 * Creates a Lazy resource, by not actually loading the data for this entry.
-	 * 
-	 * The data will be loaded on the first call to getData()
-	 * 
-	 * @param fileName the fileName for the epub we're created from.
-	 * @param size the size of this resource.
-	 * @param href The resource's href within the epub.
-	 */
-	public Resource( String fileName, long size, String href) {
-		this( null, null, href, MediatypeService.determineMediaType(href));
-		this.fileName = fileName;
-		this.cachedSize = size;
+		this(null, IOUtil.toByteArray(in), href, MediatypeService.determineMediaType(href));
 	}
 	
 	/**
@@ -192,71 +146,24 @@ public class Resource implements Serializable {
 	 * @throws IOException
 	 */
 	public InputStream getInputStream() throws IOException {
-		if (isInitialized()) {
-			return new ByteArrayInputStream(getData());
-		} else {
-			return getResourceStream();
-		}
+		return new ByteArrayInputStream(getData());
 	}
 	
 	/**
-	 * Initializes the resource by loading its data into memory.
-	 * 
-	 * @throws IOException
-	 */
-	public void initialize() throws IOException {
-		getData();
-	}
-
-	/**
 	 * The contents of the resource as a byte[]
-	 * 
-	 * If this resource was lazy-loaded and the data was not yet loaded, 
-	 * it will be loaded into memory at this point.
-	 *  This included opening the zip file, so expect a first load to be slow.
 	 * 
 	 * @return The contents of the resource
 	 */
 	public byte[] getData() throws IOException {
-		
-		if ( data == null ) {
-			
-			LOG.info("Initializing lazy resource " + fileName + "#" + this.href );
-			
-			InputStream in = getResourceStream();
-			byte[] readData = IOUtil.toByteArray(in, (int) this.cachedSize);
-			if ( readData == null ) {
-			    throw new IOException("Could not lazy-load data.");
-			} else {
-			    this.data = readData;
-			}
-			
-			in.close();
-		}
-
 		return data;
 	}
 
-	private InputStream getResourceStream() throws FileNotFoundException,
-			IOException {
-		ZipFile zipResource = new ZipFile(fileName);
-		ZipEntry zipEntry = zipResource.getEntry(originalHref);
-		if (zipEntry == null) {
-			zipResource.close();
-			throw new IllegalStateException("Cannot find resources href in the epub file");
-		}
-		return new ResourceInputStream(zipResource.getInputStream(zipEntry), zipResource);
-	}
-	
 	/**
 	 * Tells this resource to release its cached data.
 	 * 
 	 * If this resource was not lazy-loaded, this is a no-op.
 	 */
 	public void close() {
-		if ( this.fileName != null ) {
-			this.data = null;
-		}
 	}
 
 	/**
@@ -270,31 +177,18 @@ public class Resource implements Serializable {
 	}
 	
 	/**
-	 * Returns if the data for this resource has been loaded into memory.
-	 * 
-	 * @return true if data was loaded.
-	 */
-	public boolean isInitialized() {
-		return data != null;
-	}
-
-	/**
 	 * Returns the size of this resource in bytes.
 	 * 
 	 * @return the size.
 	 */
 	public long getSize() {
-		if ( data != null ) {
-			return data.length;
-		}
-		
-		return cachedSize;
+		return data.length;
 	}
 	
 	/**
 	 * If the title is found by scanning the underlying html document then it is cached here.
 	 * 
-	 * @return
+	 * @return the title
 	 */
 	public String getTitle() {
 		return title;
@@ -313,7 +207,7 @@ public class Resource implements Serializable {
 	 * The resources Id.
 	 * 
 	 * Must be both unique within all the resources of this book and a valid identifier.
-	 * @return
+	 * @return The resources Id.
 	 */
 	public String getId() {
 		return id;
@@ -326,7 +220,7 @@ public class Resource implements Serializable {
 	 * images/cover.jpg<br/>
 	 * content/chapter1.xhtml<br/>
 	 * 
-	 * @return
+	 * @return The location of the resource within the contents folder of the epub file.
 	 */
 	public String getHref() {
 		return href;
@@ -345,7 +239,7 @@ public class Resource implements Serializable {
 	 * The character encoding of the resource.
 	 * Is allowed to be null for non-text resources like images.
 	 * 
-	 * @return
+	 * @return The character encoding of the resource.
 	 */
 	public String getInputEncoding() {
 		return inputEncoding;
@@ -365,8 +259,7 @@ public class Resource implements Serializable {
 	 * 
 	 * Does all sorts of smart things (courtesy of apache commons io XMLStreamREader) to handle encodings, byte order markers, etc.
 	 * 
-	 * @param resource
-	 * @return
+	 * @return the contents of the Resource as Reader.
 	 * @throws IOException
 	 */
 	public Reader getReader() throws IOException {
@@ -384,6 +277,7 @@ public class Resource implements Serializable {
 	/**
 	 * Checks to see of the given resourceObject is a resource and whether its href is equal to this one.
 	 * 
+	 * @return whether the given resourceObject is a resource and whether its href is equal to this one.
 	 */
 	public boolean equals(Object resourceObject) {
 		if (! (resourceObject instanceof Resource)) {
@@ -395,7 +289,7 @@ public class Resource implements Serializable {
 	/**
 	 * This resource's mediaType.
 	 * 
-	 * @return
+	 * @return This resource's mediaType.
 	 */
 	public MediaType getMediaType() {
 		return mediaType;
